@@ -113,6 +113,9 @@ class MCSimpleInt():
 
 		self.update_sums(evals)
 
+		if self.store_pts:
+			self.eval_list.append(evals)
+
 
 	def update_sums(self, new_evals):
 		new_evals_arr = np.array(new_evals)
