@@ -22,14 +22,18 @@ class MCSimpleInt():
 	of samples.
 
 	:param xtf: Function to transform values of x tomodify the integration 
-	domain.
+	domain. Like `f`, this also must be vectorized.
 
 	:param store_pts: If `True`, the `MCSimpleInt` object will save all
 	evaluated points. This can run into memory constraints for large numbers
 	of samples.
+
+	:param prng: Pseudo-random number generator. Prove `int` as a seed, a
+	NumPy `RandomState` object, or None to use a random seed.
 	"""
 
-	def __init__(self, f, xbounds, chunk_size=1000, xtf=None, store_pts=False):
+	def __init__(self, f, xbounds, chunk_size=1000, xtf=None, store_pts=False,
+						prng=None):
 		super(MCIntegrator, self).__init__()
 
 		# Collect user-provided information.
@@ -73,9 +77,31 @@ class MCSimpleInt():
 			self.eval_list = None
 
 
+		# Handle prng.
+		if type(prng) == int:
+			self.prng = np.RandomState(prng)
+		elif type(prng) == np.random.RandomState:
+			self.prng = prng
+		else:
+			self.prng = np.RandomState()
+
+
+
+	def add_evals(num):
+
+		inputs = []
+		for i in range(len(self.bounds)):
+			xi_range = self.bounds[i,1] - self.bounds[i,0]
+			xi_pts = self.prng.rand(num) * xi_range + self.bounds[i,0]
+			inputs.append(xi_pts)
+
+		self.update_sums(evals)
+
+
 	def update_sums(new_evals):
-		self.f_sum += new_evals.sum()
-		self.fsq_sum += (new_evals**2).sum()
+		new_evals_arr = np.array(new_evals)
+		self.f_sum += new_evals_arr.sum()
+		self.fsq_sum += (new_evals_arr**2).sum()
 
 	def calculate_estimates():
 		f_mean   = f_sum   / self.npts
